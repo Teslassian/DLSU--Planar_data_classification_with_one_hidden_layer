@@ -10,7 +10,6 @@ def initialize_parameters_test_case():
     n_x, n_h, n_y = 2, 4, 1
     return n_x, n_h, n_y
 
-
 def forward_propagation_test_case():
     np.random.seed(1)
     X_assess = np.random.randn(2, 3)
@@ -42,7 +41,7 @@ def compute_cost_test_case():
      'b2': np.array([[ 0.]])}
 
     a2 = (np.array([[ 0.5002307 ,  0.49985831,  0.50023963]]))
-    
+
     return a2, Y_assess, parameters
 
 def backward_propagation_test_case():
