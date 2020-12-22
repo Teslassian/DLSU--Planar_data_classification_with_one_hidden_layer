@@ -57,12 +57,12 @@ def layer_sizes(X, Y):
     n_y = Y.shape[0]
 
     return n_x, n_h, n_y
-# Test the layer_sizes function
-X_assess, Y_assess = layer_sizes_test_case()
-(n_x, n_h, n_y) = layer_sizes(X_assess, Y_assess)
-print("The size of the input layer is: n_x = " + str(n_x))
-print("The size of the hidden layer is: n_h = " + str(n_h))
-print("The size of the output layer is: n_y = " + str(n_y))
+# # Test the layer_sizes function
+# X_assess, Y_assess = layer_sizes_test_case()
+# (n_x, n_h, n_y) = layer_sizes(X_assess, Y_assess)
+# print("The size of the input layer is: n_x = " + str(n_x))
+# print("The size of the hidden layer is: n_h = " + str(n_h))
+# print("The size of the output layer is: n_y = " + str(n_y))
 
 def initialize_parameters(n_x, n_h, n_y):
     """
@@ -97,9 +97,170 @@ def initialize_parameters(n_x, n_h, n_y):
                   "b2": b2}
 
     return parameters
-# Test the initialize_parameters function
-n_x, n_h, n_y = initialize_parameters_test_case()
-parameters = initialize_parameters(n_x, n_h, n_y)
+# # Test the initialize_parameters function
+# n_x, n_h, n_y = initialize_parameters_test_case()
+# parameters = initialize_parameters(n_x, n_h, n_y)
+# print("W1 = " + str(parameters["W1"]))
+# print("b1 = " + str(parameters["b1"]))
+# print("W2 = " + str(parameters["W2"]))
+# print("b2 = " + str(parameters["b2"]))
+
+def forward_propagation(X, parameters):
+    """
+    Argument:
+    X -- input data of size (n_x, m)
+    parameters -- python dictionary containing your parameters (output of initialization function)
+
+    Returns:
+    A2 -- The sigmoid output of the second activation
+    cache -- a dictionary containing "Z1", "A1", "Z2" and "A2"
+    """
+
+    # Retrieve parameters
+    W1 = parameters["W1"]
+    b1 = parameters["b1"]
+    W2 = parameters["W2"]
+    b2 = parameters["b2"]
+
+    # Forward Propagation for A2 (probabilities)
+    Z1 = W1 @ X + b1
+    A1 = np.tanh(Z1)
+    Z2 = W2 @ A1 + b2
+    A2 = sigmoid(Z2)
+    assert(A2.shape == (1, X.shape[1]))
+
+    cache = {"Z1": Z1,
+             "A1": A1,
+             "Z2": Z2,
+             "A2": A2}
+
+    return A2, cache
+# # Test the forward_propagation function
+# X_assess, parameters = forward_propagation_test_case()
+# A2, cache = forward_propagation(X_assess, parameters)
+# print(np.mean(cache['Z1']), np.mean(cache['A1']), np.mean(cache['Z2']), np.mean(cache['A2']))
+
+def compute_cost(A2, Y, parameters):
+    """
+    Computes the cross-entropy cost given in equation (13)
+
+    Arguments:
+    A2 -- The sigmoid output of the second activation, of shape (1, number of examples)
+    Y -- "true" labels vector of shape (1, number of examples)
+    parameters -- python dictionary containing your parameters W1, b1, W2 and b2
+    [Note that the parameters argument is not used in this function,
+    but the auto-grader currently expects this parameter.
+    Future version of this notebook will fix both the notebook
+    and the auto-grader so that `parameters` is not needed.
+    For now, please include `parameters` in the function signature,
+    and also when invoking this function.]
+
+    Returns:
+    cost -- cross-entropy cost given equation (13)
+
+    """
+
+    m = Y.shape[1]
+
+    # Compute the cross-entropy cost
+    cost = -1/m * (Y @ np.log(A2).T + (1-Y) @ np.log(1-A2).T)
+    # cost = - np.log(A2) @ Y.T
+    # logprobs = np.multiply(np.log(A2), Y)
+    # cost = - np.sum(logprobs)
+
+    cost = float(np.squeeze(cost))
+    assert(isinstance(cost, float))
+
+    return cost
+# # Test the compute_cost function
+# A2, Y_assess, parameters = compute_cost_test_case()
+# print("cost = " + str(compute_cost(A2, Y_assess, parameters)))
+
+def backward_propagation(parameters, cache, X, Y):
+    """
+    Implement the backward propagation using the instructions above.
+
+    Arguments:
+    parameters -- python dictionary containing our parameters
+    cache -- a dictionary containing "Z1", "A1", "Z2" and "A2".
+    X -- input data of shape (2, number of examples)
+    Y -- "true" labels vector of shape (1, number of examples)
+
+    Returns:
+    grads -- python dictionary containing your gradients with respect to different parameters
+    """
+
+    m = X.shape[1]
+
+    # Retrieve W1 and W2
+    W1 = parameters["W1"]
+    W2 = parameters["W2"]
+
+    # Retrieve A1 and A2
+    A1 = cache["A1"]
+    A2 = cache["A2"]
+
+    # Backward propagation
+    dZ2 = A2 - Y
+    dW2 = 1/m * dZ2 @ A1.T
+    db2 = 1/m * np.sum(dZ2, axis=1, keepdims=True)
+    dZ1 = (W2.T @ dZ2) * (1 - np.power(A1, 2))
+    dW1 = 1/m * dZ1 @ X.T
+    db1 = 1/m * np.sum(dZ1, axis=1, keepdims=True)
+
+    grads = {"dW1": dW1,
+             "db1": db1,
+             "dW2": dW2,
+             "db2": db2}
+
+    return grads
+# # Test the backward_propagation function
+# parameters, cache, X_assess, Y_assess = backward_propagation_test_case()
+# grads = backward_propagation(parameters, cache, X_assess, Y_assess)
+# print ("dW1 = "+ str(grads["dW1"]))
+# print ("db1 = "+ str(grads["db1"]))
+# print ("dW2 = "+ str(grads["dW2"]))
+# print ("db2 = "+ str(grads["db2"]))
+
+def update_parameters(parameters, grads, learning_rate=1.2):
+    """
+    Updates parameters using the gradient descent update rule given above
+
+    Arguments:
+    parameters -- python dictionary containing your parameters
+    grads -- python dictionary containing your gradients
+
+    Returns:
+    parameters -- python dictionary containing your updated parameters
+    """
+
+    # Retrieve parameters
+    W1 = parameters["W1"]
+    b1 = parameters["b1"]
+    W2 = parameters["W2"]
+    b2 = parameters["b2"]
+
+    # Retrieve gradients
+    dW1 = grads["dW1"]
+    db1 = grads["db1"]
+    dW2 = grads["dW2"]
+    db2 = grads["db2"]
+
+    # Update parameters
+    W1 = W1 - learning_rate * dW1
+    b1 = b1 - learning_rate * db1
+    W2 = W2 - learning_rate * dW2
+    b2 = b2 - learning_rate * db2
+
+    parameters = {"W1": W1,
+                  "b1": b1,
+                  "W2": W2,
+                  "b2": b2}
+
+    return parameters
+# Test the update_parameters function
+parameters, grads = update_parameters_test_case()
+parameters = update_parameters(parameters, grads)
 print("W1 = " + str(parameters["W1"]))
 print("b1 = " + str(parameters["b1"]))
 print("W2 = " + str(parameters["W2"]))
