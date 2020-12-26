@@ -25,7 +25,7 @@ datasets = {"noisy_circles": noisy_circles,
             "blobs": blobs,
             "gaussian_quantiles": gaussian_quantiles}
 # Choose a dataset
-dataset = "noisy_moons"
+dataset = "noisy_circles"
 # Retrieve X and Y
 X, Y = datasets[dataset]
 X, Y = X.T, Y.reshape(1, Y.shape[0])
